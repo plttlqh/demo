@@ -1,0 +1,15 @@
+---
+#id must be unique
+country:
+  - id: 1
+    code: VN
+    document:
+      type: ID, DRIVER_LICENCE
+  - id: 2
+    code: US
+    document:
+      type: ID
+  - id: 2
+    code: US
+    document:
+      type: ID, DRIVER_LICENCE, PASSPORT
