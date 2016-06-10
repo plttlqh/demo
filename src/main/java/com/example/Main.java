@@ -1,11 +1,13 @@
 package com.example;
 
 public class Main {
-    public static final int n=3;
-    public static final int m=3;
+    public static final int n = 3;
+    public static final int m = 3;
     public static final int MAX_NEIGHBOR = 3;
+    private static boolean flagGoUpOrDow = false;
+    private static int sumOtherPath = 0;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         int[][] array = new int[][]{
                 {-1,4,5,1},
@@ -13,36 +15,95 @@ public class Main {
                 {3,3,-1,3},
                 {4,2,1,2}
         };
+
+//        int[][] array = new int[][]{
+//                {-1, 4, 5, 1},
+//                {2, -1, 2, 4},
+//                {3, 3, -1, -1},
+//                {4, 2, 1, 2}
+//        };
         int[] pos;
-        int[] posNext;
-        int[] posPrev = new int[1];
-//        int[] sumAllPath = new int[n*m];
-        int sum = 0;
+        int[] posNext = new int[1];
+        int[] posPrev;
+        int[] posPrevPrev;
         pos = findPosNumberLargestByColumn(array, 0);
-        int count = 0;
-        posPrev = pos;
-        do {
-            int[][] posNumberNeighbor = findPosNumberNeighbor(pos, posPrev);
-            posNext = findPosNumberLargestByNeighbor(posNumberNeighbor, array);
-            sum+= array[pos[0]][pos[1]];
-            posPrev = pos;
-//            if(array[posNext[0]][posNext[1]] > sum){
-//                System.out.println("sout");
-//            }
-            pos = posNext;
-
-        } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <=m);
-
+        posPrevPrev = posPrev = pos;
+        int sumScore = 0;
+        sumScore = findHighestScore(array, pos, posPrev, posPrevPrev, posNext, sumScore);
+        System.out.println("Highest way: " + sumScore);
     }
 
-    private static int[] findPosNumberLargestByNeighbor(int[][] posNumberNeighbor, int[][] array) {
-        int max = -1;
-        int posX = posNumberNeighbor[0][0], posY = posNumberNeighbor[0][1];
+    private static int findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posPrevPrev, int[] posNext, int sumScore) throws Exception {
+        do {
+            int[][] posNumberNeighbor = findPosNumberNeighbor(pos, posPrev, posPrevPrev);
+            try {
+                posNext = findPosNumberLargestByNeighbor(posNumberNeighbor, array);
+            } catch (Exception e) {
+                System.out.println("Neighbors not found");
+                return sumScore += array[pos[0]][pos[1]];
+            }
+            if (flagGoUpOrDow) {
+                sumScore = 0 + array[pos[0]][pos[1]];
+            } else {
+                sumScore += array[pos[0]][pos[1]];
+            }
+            flagGoUpOrDow = checkGoUpOrGoDown(pos, posNext);
+            posPrevPrev = posPrev;
+            posPrev = pos;
+            if(flagGoUpOrDow){
+//                sumScore = 0;
+                try {
+                    posNext = findPosNumberNextToLargestByNeighbor(posNumberNeighbor, array, posNext);
+                } catch (Exception e){
+                    System.out.println("Neighbors not found by findPosNumberNextToLargestByNeighbor ");
+                    return sumScore += array[pos[0]][pos[1]];
+                }
+                pos = posNext;
+                flagGoUpOrDow = checkGoUpOrGoDown(pos, posNext);
+
+                sumOtherPath = findHighestScore(array, pos, posPrev, posPrevPrev, posNext, sumScore);
+            }
+            pos = posNext;
+
+        } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= m);
+        return sumScore;
+    }
+
+    private static int[] findPosNumberNextToLargestByNeighbor(int[][] posNumberNeighbor, int[][] array, int[] maxOfNeighbor) throws Exception {
+        if(posNumberNeighbor.length-1 == 0){
+            throw new Exception();
+        }
+        int[][] cloneNeighbor = new int[posNumberNeighbor.length-1][2];
         for (int i = 0; i < posNumberNeighbor.length; i++) {
-            if(array[posNumberNeighbor[i][0]][posNumberNeighbor[i][1]] == -1){
+            if((posNumberNeighbor[i][0] == maxOfNeighbor[0]) && (posNumberNeighbor[i][1] == maxOfNeighbor[1])){
+
+            } else {
+                cloneNeighbor[i-1][0] = posNumberNeighbor[i][0];
+                cloneNeighbor[i-1][1] = posNumberNeighbor[i][1];
+            }
+        }
+        return findPosNumberLargestByNeighbor(cloneNeighbor, array);
+    }
+
+    private static boolean checkGoUpOrGoDown(int[] pos, int[] posNext) {
+        if (pos[0] - n == posNext[0] || pos[0] + n == posNext[0]) {
+            return true;
+        }
+        return false;
+    }
+
+    private static int[] findPosNumberLargestByNeighbor(int[][] posNumberNeighbor, int[][] array) throws Exception {
+
+        int max = array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
+        int posX = posNumberNeighbor[0][0], posY = posNumberNeighbor[0][1];
+        if(posNumberNeighbor == null){
+            throw new Exception();
+        }
+        for (int i = 1; i < posNumberNeighbor.length; i++) {
+            if (array[posNumberNeighbor[i][0]][posNumberNeighbor[i][1]] == -1) {
                 continue;
             }
-            if(max < array[posNumberNeighbor[i][0]][posNumberNeighbor[i][1]]){
+            if (max < array[posNumberNeighbor[i][0]][posNumberNeighbor[i][1]]) {
                 max = array[posNumberNeighbor[i][0]][posNumberNeighbor[i][1]];
                 posX = posNumberNeighbor[i][0];
                 posY = posNumberNeighbor[i][1];
@@ -51,24 +112,61 @@ public class Main {
         return new int[]{posX, posY};
     }
 
-    private static int[][] findPosNumberNeighbor(int[] pos, int[] posPrev) {
+    private static int[][] findPosNumberNeighbor(int[] pos, int[] posPrev, int[] posPrevPrev) {
         int[][] neighbors;
-        if( pos[0] == 0 && pos[1] == 0){
+        if (pos[0] == 0 && pos[1] == 0) {
             neighbors = new int[MAX_NEIGHBOR - 1][2];
             neighbors[0][0] = pos[0] + 1 == posPrev[0] ? pos[0] + n : pos[0] + 1;
             neighbors[0][1] = pos[1];
             neighbors[1][0] = pos[0];
-            neighbors[1][1] = pos[1]+1;
-        } else if(pos[0] == n && pos[1] == 0){
-            neighbors = new int[MAX_NEIGHBOR][2];
-            neighbors[0][0] = pos[0] - 1;
-            neighbors[0][1] = pos[1];
-            neighbors[1][0] = pos[0] - n;
-            neighbors[1][1] = pos[1];
-            neighbors[2][0] = pos[0];
-            neighbors[2][1] = pos[1]+1;
-        } else if (pos[0] == n){
-            if(pos[1] - 1 == posPrev[1]){
+            neighbors[1][1] = pos[1] + 1;
+        } else if (pos[0] == n && pos[1] == 0) {
+            if (pos[0] == posPrev[0] && pos[1] == posPrev[1]) {
+                neighbors = new int[MAX_NEIGHBOR][2];
+                neighbors[0][0] = pos[0] - 1;
+                neighbors[0][1] = pos[1];
+                neighbors[1][0] = pos[0] - n;
+                neighbors[1][1] = pos[1];
+                neighbors[2][0] = pos[0];
+                neighbors[2][1] = pos[1] + 1;
+            } else {
+                neighbors = new int[MAX_NEIGHBOR - 1][2];
+                neighbors[0][0] = pos[0] - n == posPrev[0] ? pos[0] - 1 : pos[0] - n;
+                neighbors[0][1] = pos[1];
+                neighbors[1][0] = pos[0];
+                neighbors[1][1] = pos[1] + 1;
+            }
+
+        } else if (pos[0] == n && pos[1] == m) {
+            if (pos[1] - 1 == posPrev[1]) {
+                neighbors = new int[MAX_NEIGHBOR - 1][2];
+                neighbors[0][0] = pos[0] - 1;
+                neighbors[0][1] = pos[1];
+                neighbors[1][0] = pos[0] - n;
+                neighbors[1][1] = pos[1];
+            } else {
+                neighbors = new int[MAX_NEIGHBOR - 2][2];
+                neighbors[0][0] = pos[0] - n == posPrev[0] ? pos[0] - 1 : pos[0] - n;
+                neighbors[0][1] = pos[1];
+            }
+        } else if (pos[0] == 0 && pos[1] == m) {
+            if (pos[1] - 1 == posPrev[1]) {
+                neighbors = new int[MAX_NEIGHBOR - 1][2];
+                neighbors[0][0] = pos[0] + n;
+                neighbors[0][1] = pos[1];
+                neighbors[1][0] = pos[0] + 1;
+                neighbors[1][1] = pos[1];
+            } else {
+                if(posPrev[0] - 1 == posPrevPrev[0] || posPrevPrev[0] + 1 == pos[0] + n){
+                    neighbors = null;
+                } else {
+                    neighbors = new int[MAX_NEIGHBOR - 2][2];
+                    neighbors[0][0] = pos[0] + n == posPrev[0] ? pos[0] + 1 : pos[0] + n;
+                    neighbors[0][1] = pos[1];
+                }
+            }
+        } else if (pos[0] == n) {
+            if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR][2];
                 neighbors[0][0] = pos[0] - 1;
                 neighbors[0][1] = pos[1];
@@ -83,36 +181,36 @@ public class Main {
                 neighbors[1][0] = pos[0];
                 neighbors[1][1] = pos[1] + 1;
             }
-        } else if(pos[0] == n && pos[1] == m || pos[1] == m){
-            if(pos[1] - 1 == posPrev[1]){
+        } else if (pos[1] == m) {
+            if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
-                neighbors[0][0] = pos[0] - 1 == posPrev[0] ? pos[0] - n : pos[0] + 1;
+                neighbors[0][0] = pos[0] - 1;
                 neighbors[0][1] = pos[1];
-                neighbors[1][0] = pos[0] - n == posPrev[0] ? pos[0] - 1 : pos[0] - n;
+                neighbors[1][0] = pos[0] + 1;
                 neighbors[1][1] = pos[1];
             } else {
                 neighbors = new int[MAX_NEIGHBOR - 2][2];
-                neighbors[0][0] = pos[0] - n == posPrev[0] ? pos[0] - 1 : pos[0] - n;
+                neighbors[0][0] = pos[0] - 1 == posPrev[0] ? pos[0] + 1 : pos[0] - 1;
                 neighbors[0][1] = pos[1];
             }
-        } else if(pos[0] == 0){
-            if(pos[1] - 1 == posPrev[1]){
+        } else if (pos[0] == 0) {
+            if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR][2];
-                neighbors[0][0] = pos[0] - 1 == posPrev[0] ? pos[0] - n : pos[0] + 1;
+                neighbors[0][0] = pos[0] + n;
                 neighbors[0][1] = pos[1];
-                neighbors[1][0] = pos[0] - n == posPrev[0] ? pos[0] - 1 : pos[0] - n;
+                neighbors[1][0] = pos[0] + 1;
                 neighbors[1][1] = pos[1];
                 neighbors[2][0] = pos[0];
                 neighbors[2][1] = pos[1] + 1;
             } else {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
-                neighbors[0][0] = pos[0] - n == posPrev[0] ? pos[0] - 1 : pos[0] - n;
+                neighbors[0][0] = pos[0] + n == posPrev[0] ? pos[0] + 1 : pos[0] + n;
                 neighbors[0][1] = pos[1];
                 neighbors[1][0] = pos[0];
                 neighbors[1][1] = pos[1] + 1;
             }
-        }else {
-            if(pos[1] - 1 == posPrev[1]){
+        } else {
+            if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR][2];
                 neighbors[0][0] = pos[0] - 1;
                 neighbors[0][1] = pos[1];
@@ -135,7 +233,7 @@ public class Main {
         int max = array[0][byColumn];
         int pos = 0;
         for (int i = 1; i <= n; i++) {
-            if(max < array[i][byColumn]){
+            if (max < array[i][byColumn]) {
                 max = array[i][byColumn];
                 pos = i;
             }
