@@ -4,83 +4,99 @@ public class Main {
     public static final int n = 3;
     public static final int m = 3;
     public static final int MAX_NEIGHBOR = 3;
-    private static boolean flagGoUpOrDow = false;
+
     private static int sumOtherPath = 0;
 
-    public static void main(String[] args) throws Exception {
-
-        int[][] array = new int[][]{
-                {-1,4,5,1},
-                {2,-1,2,4},
-                {3,3,-1,3},
-                {4,2,1,2}
-        };
+    public static void main(String[] args){
 
 //        int[][] array = new int[][]{
-//                {-1, 4, 5, 1},
-//                {2, -1, 2, 4},
-//                {3, 3, -1, -1},
-//                {4, 2, 1, 2}
+//                {-1,4,5,1},
+//                {2,-1,2,4},
+//                {3,3,-1,3},
+//                {4,2,1,2}
 //        };
+
+        int[][] array = new int[][]{
+                {-1, 4, 5, 1},
+                {2, -1, 2, 4},
+                {3, 3, -1, -1},
+                {4, 2, 1, 2}
+        };
         int[] pos;
         int[] posNext = new int[1];
         int[] posPrev;
         int[] posPrevPrev;
         pos = findPosNumberLargestByColumn(array, 0);
         posPrevPrev = posPrev = pos;
-        int sumScore = 0;
-        sumScore = findHighestScore(array, pos, posPrev, posPrevPrev, posNext, sumScore);
-        System.out.println("Highest way: " + sumScore);
+        int sum = 0;
+        boolean flagGoUpOrDow = false;
+        sum = findHighestScore(array, pos, posPrev, posPrevPrev, posNext, sum, flagGoUpOrDow);
+        System.out.println("Highest way: " + sum);
     }
 
-    private static int findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posPrevPrev, int[] posNext, int sumScore) throws Exception {
+    private static int findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posPrevPrev, int[] posNext, int sum, boolean flagGoUpOrDow){
         do {
             int[][] posNumberNeighbor = findPosNumberNeighbor(pos, posPrev, posPrevPrev);
             try {
                 posNext = findPosNumberLargestByNeighbor(posNumberNeighbor, array);
-            } catch (Exception e) {
+            } catch (NullPointerException e) {
                 System.out.println("Neighbors not found");
-                return sumScore += array[pos[0]][pos[1]];
-            }
-            if (flagGoUpOrDow) {
-                sumScore = 0 + array[pos[0]][pos[1]];
-            } else {
-                sumScore += array[pos[0]][pos[1]];
+                return sum += array[pos[0]][pos[1]];
             }
             flagGoUpOrDow = checkGoUpOrGoDown(pos, posNext);
+
+            if(flagGoUpOrDow){
+                sum += array[pos[0]][pos[1]];
+                int[] posNextOtherPath = new int[2];
+                try {
+                    if(posNumberNeighbor.length == 1){
+//                        posNextOtherPath[0] = posNumberNeighbor[0][0];
+//                        posNextOtherPath[1] = posNumberNeighbor[0][1];
+                        sum = sum > array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]] ? sum : array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
+                        return sum > sumOtherPath ? sum : sumOtherPath;
+                    } else {
+                        posNextOtherPath = findPosNumberNextToLargestByNeighbor(posNumberNeighbor, array, posNext);
+                    }
+                } catch (NullPointerException e){
+                    System.out.println("Neighbors not found by findPosNumberNextToLargestByNeighbor ");
+                    return sum;
+                }
+                if(array[posNextOtherPath[0]][posNextOtherPath[1]] == -1){
+                    return sum;
+                }
+                int[] posPrevPrevNewPath = posPrev;
+                int[] posPrevNewPath = pos;
+                int[] posNewPath = posNextOtherPath;
+                flagGoUpOrDow = checkGoUpOrGoDown(posNewPath, posNextOtherPath);
+                int highestScore = findHighestScore(array, posNewPath, posPrevNewPath, posPrevPrevNewPath, posNextOtherPath, sum, flagGoUpOrDow);
+                sumOtherPath = sumOtherPath > highestScore ?  sumOtherPath :  highestScore;
+                sum = 0;
+            } else {
+                sum += array[pos[0]][pos[1]];
+            }
             posPrevPrev = posPrev;
             posPrev = pos;
-            if(flagGoUpOrDow){
-//                sumScore = 0;
-                try {
-                    posNext = findPosNumberNextToLargestByNeighbor(posNumberNeighbor, array, posNext);
-                } catch (Exception e){
-                    System.out.println("Neighbors not found by findPosNumberNextToLargestByNeighbor ");
-                    return sumScore += array[pos[0]][pos[1]];
-                }
-                pos = posNext;
-                flagGoUpOrDow = checkGoUpOrGoDown(pos, posNext);
-
-                sumOtherPath = findHighestScore(array, pos, posPrev, posPrevPrev, posNext, sumScore);
-            }
             pos = posNext;
-
         } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= m);
-        return sumScore;
+        return sum;
     }
 
-    private static int[] findPosNumberNextToLargestByNeighbor(int[][] posNumberNeighbor, int[][] array, int[] maxOfNeighbor) throws Exception {
+    private static int[] findPosNumberNextToLargestByNeighbor(int[][] posNumberNeighbor, int[][] array, int[] maxOfNeighbor) throws NullPointerException {
         if(posNumberNeighbor.length-1 == 0){
-            throw new Exception();
+            throw new NullPointerException();
         }
         int[][] cloneNeighbor = new int[posNumberNeighbor.length-1][2];
         for (int i = 0; i < posNumberNeighbor.length; i++) {
-            if((posNumberNeighbor[i][0] == maxOfNeighbor[0]) && (posNumberNeighbor[i][1] == maxOfNeighbor[1])){
-
-            } else {
-                cloneNeighbor[i-1][0] = posNumberNeighbor[i][0];
-                cloneNeighbor[i-1][1] = posNumberNeighbor[i][1];
+            if((posNumberNeighbor[i][0] == maxOfNeighbor[0]) && (posNumberNeighbor[i][1] == maxOfNeighbor[1])) {
+                if(i + 1 < posNumberNeighbor.length) {
+                    posNumberNeighbor[i][0] = posNumberNeighbor[i + 1][0];
+                    posNumberNeighbor[i][1] = posNumberNeighbor[i + 1][1];
+                }
             }
+        }
+        for (int i = 0; i < cloneNeighbor.length; i++) {
+            cloneNeighbor[i][0] = posNumberNeighbor[i][0];
+            cloneNeighbor[i][1] = posNumberNeighbor[i][1];
         }
         return findPosNumberLargestByNeighbor(cloneNeighbor, array);
     }
@@ -92,12 +108,12 @@ public class Main {
         return false;
     }
 
-    private static int[] findPosNumberLargestByNeighbor(int[][] posNumberNeighbor, int[][] array) throws Exception {
+    private static int[] findPosNumberLargestByNeighbor(int[][] posNumberNeighbor, int[][] array) throws NullPointerException {
 
         int max = array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
         int posX = posNumberNeighbor[0][0], posY = posNumberNeighbor[0][1];
         if(posNumberNeighbor == null){
-            throw new Exception();
+            throw new NullPointerException();
         }
         for (int i = 1; i < posNumberNeighbor.length; i++) {
             if (array[posNumberNeighbor[i][0]][posNumberNeighbor[i][1]] == -1) {
