@@ -17,11 +17,18 @@ public class Main {
 //        };
 
         int[][] array = new int[][]{
-                {-1, 4, 5, 1},
-                {2, -1, 2, 4},
-                {3, 3, -1, -1},
-                {4, 2, 1, 2}
+                {-1,4,5,142},
+                {2,-1,2,4},
+                {3,3,-1,-1},
+                {4,2,1,244}
         };
+
+//        int[][] array = new int[][]{
+//                {-1, 4, 5, 1},
+//                {2, -1, 2, 4},
+//                {3, 3, -1, -1},
+//                {4, 2, 1, 2}
+//        };
         int[] pos;
         int[] posNext = new int[1];
         int[] posPrev;
@@ -50,8 +57,6 @@ public class Main {
                 int[] posNextOtherPath = new int[2];
                 try {
                     if(posNumberNeighbor.length == 1){
-//                        posNextOtherPath[0] = posNumberNeighbor[0][0];
-//                        posNextOtherPath[1] = posNumberNeighbor[0][1];
                         sum = sum > array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]] ? sum : array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
                         return sum > sumOtherPath ? sum : sumOtherPath;
                     } else {
@@ -78,7 +83,7 @@ public class Main {
             posPrev = pos;
             pos = posNext;
         } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= m);
-        return sum;
+        return sum > sumOtherPath ? sum : sumOtherPath;
     }
 
     private static int[] findPosNumberNextToLargestByNeighbor(int[][] posNumberNeighbor, int[][] array, int[] maxOfNeighbor) throws NullPointerException {
