@@ -9,20 +9,26 @@ public class Main {
 
     public static void main(String[] args){
 
-//        int[][] array = new int[][]{
-//                {-1,4,5,1},
-//                {2,-1,2,4},
-//                {3,3,-1,3},
-//                {4,2,1,2}
-//        };
-
         int[][] array = new int[][]{
-                {-1,4,5,142},
+                {-1,4,5,1},
                 {2,-1,2,4},
-                {3,3,-1,-1},
-                {4,2,1,244}
+                {3,3,-1,3},
+                {4,2,1,2}
         };
 
+//        int[][] array = new int[][]{
+//                {-1,4,5,142},
+//                {2,-1,2,4},
+//                {3,3,-1,-1},
+//                {4,2,1,244}
+//        };
+
+//        int[][] array = new int[][]{
+//                {10,1,1,-1},
+//                {2,-1,-1,4},
+//                {3,-1,-1,-1},
+//                {4,3,-1,244}
+//        };
 //        int[][] array = new int[][]{
 //                {-1, 4, 5, 1},
 //                {2, -1, 2, 4},
@@ -60,13 +66,16 @@ public class Main {
                         sum = sum > array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]] ? sum : array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
                         return sum > sumOtherPath ? sum : sumOtherPath;
                     } else {
-                        posNextOtherPath = findPosNumberNextToLargestByNeighbor(posNumberNeighbor, array, posNext);
+                        posNextOtherPath = findPosNumberNextToLargestByNeighbor(posNumberNeighbor.clone(), array, posNext);
                     }
                 } catch (NullPointerException e){
                     System.out.println("Neighbors not found by findPosNumberNextToLargestByNeighbor ");
                     return sum;
                 }
                 if(array[posNextOtherPath[0]][posNextOtherPath[1]] == -1){
+                    if(!isSnakeCanReachRightSide(pos)){
+                        return -1;
+                    }
                     return sum;
                 }
                 int[] posPrevPrevNewPath = posPrev;
@@ -83,7 +92,18 @@ public class Main {
             posPrev = pos;
             pos = posNext;
         } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= m);
+        if(!isSnakeCanReachRightSide(pos)){
+            return -1;
+        }
         return sum > sumOtherPath ? sum : sumOtherPath;
+    }
+
+    private static boolean isSnakeCanReachRightSide(int[] pos) {
+        if(pos[1] == m){
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private static int[] findPosNumberNextToLargestByNeighbor(int[][] posNumberNeighbor, int[][] array, int[] maxOfNeighbor) throws NullPointerException {
@@ -91,9 +111,16 @@ public class Main {
             throw new NullPointerException();
         }
         int[][] cloneNeighbor = new int[posNumberNeighbor.length-1][2];
+        boolean flagMove = false;
         for (int i = 0; i < posNumberNeighbor.length; i++) {
             if((posNumberNeighbor[i][0] == maxOfNeighbor[0]) && (posNumberNeighbor[i][1] == maxOfNeighbor[1])) {
                 if(i + 1 < posNumberNeighbor.length) {
+                    posNumberNeighbor[i][0] = posNumberNeighbor[i + 1][0];
+                    posNumberNeighbor[i][1] = posNumberNeighbor[i + 1][1];
+                    flagMove = true;
+                }
+            } else {
+                if (flagMove && i + 1 < posNumberNeighbor.length){
                     posNumberNeighbor[i][0] = posNumberNeighbor[i + 1][0];
                     posNumberNeighbor[i][1] = posNumberNeighbor[i + 1][1];
                 }
