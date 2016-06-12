@@ -7,27 +7,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Main {
-    public static int ROW = 3;
-    public static int COLUMN = 3;
+    public static int ROW = 0;
+    public static int COLUMN = 0;
     public static final int MAX_NEIGHBOR = 3;
+
     private static final int INPUT_LENGTH_INVALID = 1;
     private static final int INPUT_VALUE_INVALID = 2;
-
     private static int[] sumOtherPath = new int[2];
     private static int[][] arrayPath;
 
     public static void main(String[] args) throws IOException {
         inputArray();
         int[] pos;
-        int[] posNext = new int[1];
+        int[] posNext = new int[2];
         int[] posPrev;
         HashMap<Integer, Integer> posPassed = new HashMap<>();
 
         pos = findPosNumberLargestByColumn(arrayPath, 0);
         posPrev = pos;
         int sumScore = 0;
-        boolean flagGoUpOrDow = false;
-        int[] highestScore = findHighestScore(arrayPath, pos, posPrev, posNext, sumScore, flagGoUpOrDow, posPassed);
+        int[] highestScore = findHighestScore(arrayPath, pos, posPrev, posNext, sumScore, false, posPassed);
+
         int finalScore = highestScore[1] == 1 ? highestScore[0] : -1;
         System.out.println("Highest way: " + finalScore);
     }
@@ -86,7 +86,7 @@ public class Main {
             pos = posNext;
         } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= COLUMN);
         if(sum > sumOtherPath[0]){
-            return new int[]{sum, isSnakeCanReachRightSide(pos) ? 1 : 0};
+            return new int[]{sum, isSnakeCanReachRightSide(posPrev) ? 1 : 0};
         } else {
             return sumOtherPath;
         }
@@ -197,13 +197,7 @@ public class Main {
             neighbors[1][1] = pos[1] + 1;
         } else if (pos[0] == ROW && pos[1] == 0) {
             if (pos[0] == posPrev[0] && pos[1] == posPrev[1]) {
-                neighbors = new int[MAX_NEIGHBOR][2];
-                neighbors[0][0] = pos[0] - 1;
-                neighbors[0][1] = pos[1];
-                neighbors[1][0] = pos[0] - ROW;
-                neighbors[1][1] = pos[1];
-                neighbors[2][0] = pos[0];
-                neighbors[2][1] = pos[1] + 1;
+                neighbors = createNeighborsPos00(pos);
             } else {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
                 neighbors[0][0] = pos[0] - ROW == posPrev[0] ? pos[0] - 1 : pos[0] - ROW;
@@ -238,13 +232,7 @@ public class Main {
             }
         } else if (pos[0] == ROW) {
             if (pos[1] - 1 == posPrev[1]) {
-                neighbors = new int[MAX_NEIGHBOR][2];
-                neighbors[0][0] = pos[0] - 1;
-                neighbors[0][1] = pos[1];
-                neighbors[1][0] = pos[0] - ROW;
-                neighbors[1][1] = pos[1];
-                neighbors[2][0] = pos[0];
-                neighbors[2][1] = pos[1] + 1;
+                neighbors = createNeighborsPos00(pos);
             } else {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
                 neighbors[0][0] = pos[0] - 1 == posPrev[0] ? pos[0] - ROW : pos[0] - 1;
@@ -300,17 +288,30 @@ public class Main {
         return filterNeighborsIfItPassed(neighbors, posPassed);
     }
 
+    private static int[][] createNeighborsPos00(int[] pos) {
+        int[][] neighbors;
+        neighbors = new int[MAX_NEIGHBOR][2];
+        neighbors[0][0] = pos[0] - 1;
+        neighbors[0][1] = pos[1];
+        neighbors[1][0] = pos[0] - ROW;
+        neighbors[1][1] = pos[1];
+        neighbors[2][0] = pos[0];
+        neighbors[2][1] = pos[1] + 1;
+        return neighbors;
+    }
+
     private static int[][] filterNeighborsIfItPassed(int[][] neighbors, HashMap<Integer, Integer> posPassed) {
         int[] posDup = new int[2];
         boolean flagDup = false;
         if(posPassed.size() >= ROW - 1){
-
+            outerLoop:
             for (int i = 0; i < neighbors.length; i++) {
                 for (Map.Entry<Integer, Integer> entry : posPassed.entrySet()) {
                     if(neighbors[i][0] == entry.getKey() && neighbors[i][1] == entry.getValue()){
                         posDup[0] = entry.getKey();
                         posDup[1] = entry.getValue();
                         flagDup = true;
+                        break outerLoop;
                     }
                 }
             }
