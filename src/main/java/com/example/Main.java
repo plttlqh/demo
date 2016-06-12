@@ -3,7 +3,6 @@ package com.example;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Scanner;
 
 public class Main {
     public static int ROW = 3;
@@ -16,34 +15,8 @@ public class Main {
     private static int[][] arrayPath;
 
     public static void main(String[] args) throws IOException {
-//        arrayPath = new int[][]{
-//                {-1,4,5,1},
-//                {2,-1,2,4},
-//                {3,3,-1,3},
-//                {4,2,1,2}
-//        };
         inputArray();
 
-
-//        int[][] array = new int[][]{
-//                {-1,4,5,142},
-//                {2,-1,2,4},
-//                {3,3,-1,-1},
-//                {4,2,1,244}
-//        };
-
-//        int[][] array = new int[][]{
-//                {10,1,1,-1},
-//                {2,-1,-1,4},
-//                {3,-1,-1,-1},
-//                {4,3,-1,244}
-//        };
-//        int[][] array2 = new int[][]{
-//                {-1, 4, 5, 1},
-//                {2, -1, 2, 4},
-//                {3, 3, -1, -1},
-//                {4, 2, 1, 2}
-//        };
         int[] pos;
         int[] posNext = new int[1];
         int[] posPrev;
@@ -83,7 +56,6 @@ public class Main {
                 System.exit(INPUT_LENGTH_INVALID);
             }
         }
-        System.out.println();
     }
 
     private static int findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posPrevPrev, int[] posNext, int sum, boolean flagGoUpOrDow){
@@ -120,8 +92,7 @@ public class Main {
                 int[] posPrevPrevNewPath = posPrev;
                 int[] posPrevNewPath = pos;
                 int[] posNewPath = posNextOtherPath;
-                flagGoUpOrDow = checkGoUpOrGoDown(posNewPath, posNextOtherPath);
-                int highestScore = findHighestScore(array, posNewPath, posPrevNewPath, posPrevPrevNewPath, posNextOtherPath, sum, flagGoUpOrDow);
+                int highestScore = findHighestScore(array, posNewPath, posPrevNewPath, posPrevPrevNewPath, posNextOtherPath, sum, false);
                 sumOtherPath = sumOtherPath > highestScore ?  sumOtherPath :  highestScore;
                 sum = 0;
             } else {
