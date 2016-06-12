@@ -13,29 +13,11 @@ public class Main {
     private static final int INPUT_LENGTH_INVALID = 1;
     private static final int INPUT_VALUE_INVALID = 2;
 
-    private static int sumOtherPath = 0;
+    private static int[] sumOtherPath = new int[2];
     private static int[][] arrayPath;
 
     public static void main(String[] args) throws IOException {
-//        inputArray();
-//        arrayPath = new int[][]{
-//                {-1,4,5,1},
-//                {2,-1,2,4},
-//                {3,3,-1,3},
-//                {4,2,1,2}
-//        };
-        arrayPath = new int[][]{
-                {10,1,1,-1},
-                {2,-1,-1,4},
-                {3,-1,-1,-1},
-                {4,3,1,244}
-        };
-//        arrayPath = new int[][]{
-//                {-1, 4, 5, 1},
-//                {2, -1, 2, 4},
-//                {3, 3, -1, -1},
-//                {4, 2, 1, 2}
-//        };
+        inputArray();
         int[] pos;
         int[] posNext = new int[1];
         int[] posPrev;
@@ -45,8 +27,69 @@ public class Main {
         posPrev = pos;
         int sumScore = 0;
         boolean flagGoUpOrDow = false;
-        sumScore = findHighestScore(arrayPath, pos, posPrev, posNext, sumScore, flagGoUpOrDow, posPassed);
-        System.out.println("Highest way: " + sumScore);
+        int[] highestScore = findHighestScore(arrayPath, pos, posPrev, posNext, sumScore, flagGoUpOrDow, posPassed);
+        int finalScore = highestScore[1] == 1 ? highestScore[0] : -1;
+        System.out.println("Highest way: " + finalScore);
+    }
+
+
+    private static int[] findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posNext, int sum, boolean flagGoUpOrDow, HashMap<Integer, Integer> posPassed){
+        do {
+            int[][] posNumberNeighbor = findPosNumberNeighbor(pos, posPrev, posPassed);
+            try {
+                posNext = findPosNumberLargestByNeighbor(posNumberNeighbor, array);
+            } catch (NullPointerException e) {
+                System.out.println("Neighbors not found");
+                return new int[]{sum += array[pos[0]][pos[1]], isSnakeCanReachRightSide(pos) ? 1 : 0 };
+            }
+            flagGoUpOrDow = checkGoUpOrGoDown(pos, posNext);
+
+            if(flagGoUpOrDow){
+                sum += array[pos[0]][pos[1]];
+                int[] posNextOtherPath = new int[2];
+                try {
+                    if(posNumberNeighbor.length == 1){
+                        sum = sum > array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]] ? sum : array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
+                        if(sum > sumOtherPath[0]){
+                            return new int[]{sum, isSnakeCanReachRightSide(pos) ? 1 : 0};
+                        } else {
+                            return sumOtherPath;
+                        }
+                    } else {
+                        posNextOtherPath = findPosNumberNextToLargestByNeighbor(posNumberNeighbor.clone(), array, posNext);
+                    }
+                } catch (NullPointerException e){
+                    System.out.println("Neighbors not found by findPosNumberNextToLargestByNeighbor ");
+                    return new int[]{sum, isSnakeCanReachRightSide(pos) ? 1 : 0};
+                }
+                if(array[posNextOtherPath[0]][posNextOtherPath[1]] == -1){
+                    if(sum > sumOtherPath[0]){
+                        return new int[]{sum, isSnakeCanReachRightSide(pos) ? 1 : 0};
+                    } else {
+                        return sumOtherPath;
+                    }
+                }
+                int[] posPrevNewPath = pos;
+                int[] posNewPath = posNextOtherPath;
+                HashMap<Integer, Integer> posPassedNewPath = new HashMap<>();
+                posPassedNewPath.put(posNewPath[0], posNewPath[1]);
+                sumOtherPath[0] = 0;
+                int[] highestScore = findHighestScore(array, posNewPath, posPrevNewPath, posNextOtherPath, sum, false, posPassedNewPath);
+                sumOtherPath[0] = sumOtherPath[0] > highestScore[0] ?  sumOtherPath[0] :  highestScore[0];
+                sumOtherPath[1] = highestScore[1];
+                sum = 0;
+            } else {
+                sum += array[pos[0]][pos[1]];
+            }
+            posPrev = pos;
+            posPassed.put(pos[0], pos[1]);
+            pos = posNext;
+        } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= COLUMN);
+        if(sum > sumOtherPath[0]){
+            return new int[]{sum, isSnakeCanReachRightSide(pos) ? 1 : 0};
+        } else {
+            return sumOtherPath;
+        }
     }
 
     private static void inputArray() throws IOException {
@@ -76,57 +119,6 @@ public class Main {
                 System.exit(INPUT_LENGTH_INVALID);
             }
         }
-    }
-
-    private static int findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posNext, int sum, boolean flagGoUpOrDow, HashMap<Integer, Integer> posPassed){
-        do {
-            int[][] posNumberNeighbor = findPosNumberNeighbor(pos, posPrev, posPassed);
-            try {
-                posNext = findPosNumberLargestByNeighbor(posNumberNeighbor, array);
-            } catch (NullPointerException e) {
-                System.out.println("Neighbors not found");
-                return sum += array[pos[0]][pos[1]];
-            }
-            flagGoUpOrDow = checkGoUpOrGoDown(pos, posNext);
-
-            if(flagGoUpOrDow){
-                sum += array[pos[0]][pos[1]];
-                int[] posNextOtherPath = new int[2];
-                try {
-                    if(posNumberNeighbor.length == 1){
-                        sum = sum > array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]] ? sum : array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
-                        return sum > sumOtherPath ? sum : sumOtherPath;
-                    } else {
-                        posNextOtherPath = findPosNumberNextToLargestByNeighbor(posNumberNeighbor.clone(), array, posNext);
-                    }
-                } catch (NullPointerException e){
-                    System.out.println("Neighbors not found by findPosNumberNextToLargestByNeighbor ");
-                    return sum;
-                }
-                if(array[posNextOtherPath[0]][posNextOtherPath[1]] == -1){
-                    if(!isSnakeCanReachRightSide(pos)){
-                        return -1;
-                    }
-                    return sum;
-                }
-                int[] posPrevNewPath = pos;
-                int[] posNewPath = posNextOtherPath;
-                HashMap<Integer, Integer> posPassedNewPath = new HashMap<>();
-                posPassedNewPath.put(posNewPath[0], posNewPath[1]);
-                int highestScore = findHighestScore(array, posNewPath, posPrevNewPath, posNextOtherPath, sum, false, posPassedNewPath);
-                sumOtherPath = sumOtherPath > highestScore ?  sumOtherPath :  highestScore;
-                sum = 0;
-            } else {
-                sum += array[pos[0]][pos[1]];
-            }
-            posPrev = pos;
-            posPassed.put(pos[0], pos[1]);
-            pos = posNext;
-        } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= COLUMN);
-        if(!isSnakeCanReachRightSide(pos)){
-            return -1;
-        }
-        return sum > sumOtherPath ? sum : sumOtherPath;
     }
 
     private static boolean isSnakeCanReachRightSide(int[] pos) {
