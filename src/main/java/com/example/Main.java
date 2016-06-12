@@ -1,20 +1,29 @@
 package com.example;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Scanner;
+
 public class Main {
-    public static final int n = 3;
-    public static final int m = 3;
+    public static int ROW = 3;
+    public static int COLUMN = 3;
     public static final int MAX_NEIGHBOR = 3;
+    private static final int INPUT_LENGTH_INVALID = 1;
+    private static final int INPUT_VALUE_INVALID = 2;
 
     private static int sumOtherPath = 0;
+    private static int[][] arrayPath;
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
+//        arrayPath = new int[][]{
+//                {-1,4,5,1},
+//                {2,-1,2,4},
+//                {3,3,-1,3},
+//                {4,2,1,2}
+//        };
+        inputArray();
 
-        int[][] array = new int[][]{
-                {-1,4,5,1},
-                {2,-1,2,4},
-                {3,3,-1,3},
-                {4,2,1,2}
-        };
 
 //        int[][] array = new int[][]{
 //                {-1,4,5,142},
@@ -29,7 +38,7 @@ public class Main {
 //                {3,-1,-1,-1},
 //                {4,3,-1,244}
 //        };
-//        int[][] array = new int[][]{
+//        int[][] array2 = new int[][]{
 //                {-1, 4, 5, 1},
 //                {2, -1, 2, 4},
 //                {3, 3, -1, -1},
@@ -39,12 +48,42 @@ public class Main {
         int[] posNext = new int[1];
         int[] posPrev;
         int[] posPrevPrev;
-        pos = findPosNumberLargestByColumn(array, 0);
+        pos = findPosNumberLargestByColumn(arrayPath, 0);
         posPrevPrev = posPrev = pos;
-        int sum = 0;
+        int sumScore = 0;
         boolean flagGoUpOrDow = false;
-        sum = findHighestScore(array, pos, posPrev, posPrevPrev, posNext, sum, flagGoUpOrDow);
-        System.out.println("Highest way: " + sum);
+        sumScore = findHighestScore(arrayPath, pos, posPrev, posPrevPrev, posNext, sumScore, flagGoUpOrDow);
+        System.out.println("Highest way: " + sumScore);
+    }
+
+    private static void inputArray() throws IOException {
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        do{
+            System.out.println("Input row and column of array");
+            String[] line = input.readLine().split(" ");
+            if (line.length != 2){
+                System.exit(INPUT_LENGTH_INVALID);
+            }
+            ROW = Integer.parseInt(line[0]) - 1;
+            COLUMN  = Integer.parseInt(line[1]) - 1;
+        } while (ROW < 1 || ROW > 500 || COLUMN < 1 || COLUMN > 500);
+        arrayPath = new int[ROW+1][COLUMN+1];
+        for (int i = 0; i <= ROW; i++) {
+            String[] line = input.readLine().split(" ");
+            if (line.length - 1 == COLUMN){
+                for (int j = 0; j <= COLUMN; j++) {
+                    int valueInt = Integer.parseInt(line[j]);
+                    if(valueInt < -1 || valueInt > 99999){
+                        System.exit(INPUT_VALUE_INVALID);
+                    }
+                    arrayPath[i][j] = valueInt;
+                }
+            } else {
+                System.out.println("Input not right");
+                System.exit(INPUT_LENGTH_INVALID);
+            }
+        }
+        System.out.println();
     }
 
     private static int findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posPrevPrev, int[] posNext, int sum, boolean flagGoUpOrDow){
@@ -91,7 +130,7 @@ public class Main {
             posPrevPrev = posPrev;
             posPrev = pos;
             pos = posNext;
-        } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= m);
+        } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= COLUMN);
         if(!isSnakeCanReachRightSide(pos)){
             return -1;
         }
@@ -99,7 +138,7 @@ public class Main {
     }
 
     private static boolean isSnakeCanReachRightSide(int[] pos) {
-        if(pos[1] == m){
+        if(pos[1] == COLUMN){
             return true;
         } else {
             return false;
@@ -134,19 +173,18 @@ public class Main {
     }
 
     private static boolean checkGoUpOrGoDown(int[] pos, int[] posNext) {
-        if (pos[0] - n == posNext[0] || pos[0] + n == posNext[0]) {
+        if (pos[0] - ROW == posNext[0] || pos[0] + ROW == posNext[0]) {
             return true;
         }
         return false;
     }
 
     private static int[] findPosNumberLargestByNeighbor(int[][] posNumberNeighbor, int[][] array) throws NullPointerException {
-
-        int max = array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
-        int posX = posNumberNeighbor[0][0], posY = posNumberNeighbor[0][1];
         if(posNumberNeighbor == null){
             throw new NullPointerException();
         }
+        int max = array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
+        int posX = posNumberNeighbor[0][0], posY = posNumberNeighbor[0][1];
         for (int i = 1; i < posNumberNeighbor.length; i++) {
             if (array[posNumberNeighbor[i][0]][posNumberNeighbor[i][1]] == -1) {
                 continue;
@@ -164,72 +202,72 @@ public class Main {
         int[][] neighbors;
         if (pos[0] == 0 && pos[1] == 0) {
             neighbors = new int[MAX_NEIGHBOR - 1][2];
-            neighbors[0][0] = pos[0] + 1 == posPrev[0] ? pos[0] + n : pos[0] + 1;
+            neighbors[0][0] = pos[0] + 1 == posPrev[0] ? pos[0] + ROW : pos[0] + 1;
             neighbors[0][1] = pos[1];
             neighbors[1][0] = pos[0];
             neighbors[1][1] = pos[1] + 1;
-        } else if (pos[0] == n && pos[1] == 0) {
+        } else if (pos[0] == ROW && pos[1] == 0) {
             if (pos[0] == posPrev[0] && pos[1] == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR][2];
                 neighbors[0][0] = pos[0] - 1;
                 neighbors[0][1] = pos[1];
-                neighbors[1][0] = pos[0] - n;
+                neighbors[1][0] = pos[0] - ROW;
                 neighbors[1][1] = pos[1];
                 neighbors[2][0] = pos[0];
                 neighbors[2][1] = pos[1] + 1;
             } else {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
-                neighbors[0][0] = pos[0] - n == posPrev[0] ? pos[0] - 1 : pos[0] - n;
+                neighbors[0][0] = pos[0] - ROW == posPrev[0] ? pos[0] - 1 : pos[0] - ROW;
                 neighbors[0][1] = pos[1];
                 neighbors[1][0] = pos[0];
                 neighbors[1][1] = pos[1] + 1;
             }
 
-        } else if (pos[0] == n && pos[1] == m) {
+        } else if (pos[0] == ROW && pos[1] == COLUMN) {
             if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
                 neighbors[0][0] = pos[0] - 1;
                 neighbors[0][1] = pos[1];
-                neighbors[1][0] = pos[0] - n;
+                neighbors[1][0] = pos[0] - ROW;
                 neighbors[1][1] = pos[1];
             } else {
                 neighbors = new int[MAX_NEIGHBOR - 2][2];
-                neighbors[0][0] = pos[0] - n == posPrev[0] ? pos[0] - 1 : pos[0] - n;
+                neighbors[0][0] = pos[0] - ROW == posPrev[0] ? pos[0] - 1 : pos[0] - ROW;
                 neighbors[0][1] = pos[1];
             }
-        } else if (pos[0] == 0 && pos[1] == m) {
+        } else if (pos[0] == 0 && pos[1] == COLUMN) {
             if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
-                neighbors[0][0] = pos[0] + n;
+                neighbors[0][0] = pos[0] + ROW;
                 neighbors[0][1] = pos[1];
                 neighbors[1][0] = pos[0] + 1;
                 neighbors[1][1] = pos[1];
             } else {
-                if(posPrev[0] - 1 == posPrevPrev[0] || posPrevPrev[0] + 1 == pos[0] + n){
+                if(posPrev[0] - 1 == posPrevPrev[0] || posPrevPrev[0] + 1 == pos[0] + ROW){
                     neighbors = null;
                 } else {
                     neighbors = new int[MAX_NEIGHBOR - 2][2];
-                    neighbors[0][0] = pos[0] + n == posPrev[0] ? pos[0] + 1 : pos[0] + n;
+                    neighbors[0][0] = pos[0] + ROW == posPrev[0] ? pos[0] + 1 : pos[0] + ROW;
                     neighbors[0][1] = pos[1];
                 }
             }
-        } else if (pos[0] == n) {
+        } else if (pos[0] == ROW) {
             if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR][2];
                 neighbors[0][0] = pos[0] - 1;
                 neighbors[0][1] = pos[1];
-                neighbors[1][0] = pos[0] - n;
+                neighbors[1][0] = pos[0] - ROW;
                 neighbors[1][1] = pos[1];
                 neighbors[2][0] = pos[0];
                 neighbors[2][1] = pos[1] + 1;
             } else {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
-                neighbors[0][0] = pos[0] - 1 == posPrev[0] ? pos[0] - n : pos[0] - 1;
+                neighbors[0][0] = pos[0] - 1 == posPrev[0] ? pos[0] - ROW : pos[0] - 1;
                 neighbors[0][1] = pos[1];
                 neighbors[1][0] = pos[0];
                 neighbors[1][1] = pos[1] + 1;
             }
-        } else if (pos[1] == m) {
+        } else if (pos[1] == COLUMN) {
             if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
                 neighbors[0][0] = pos[0] - 1;
@@ -244,7 +282,7 @@ public class Main {
         } else if (pos[0] == 0) {
             if (pos[1] - 1 == posPrev[1]) {
                 neighbors = new int[MAX_NEIGHBOR][2];
-                neighbors[0][0] = pos[0] + n;
+                neighbors[0][0] = pos[0] + ROW;
                 neighbors[0][1] = pos[1];
                 neighbors[1][0] = pos[0] + 1;
                 neighbors[1][1] = pos[1];
@@ -252,7 +290,7 @@ public class Main {
                 neighbors[2][1] = pos[1] + 1;
             } else {
                 neighbors = new int[MAX_NEIGHBOR - 1][2];
-                neighbors[0][0] = pos[0] + n == posPrev[0] ? pos[0] + 1 : pos[0] + n;
+                neighbors[0][0] = pos[0] + ROW == posPrev[0] ? pos[0] + 1 : pos[0] + ROW;
                 neighbors[0][1] = pos[1];
                 neighbors[1][0] = pos[0];
                 neighbors[1][1] = pos[1] + 1;
@@ -280,7 +318,7 @@ public class Main {
     private static int[] findPosNumberLargestByColumn(int[][] array, int byColumn) {
         int max = array[0][byColumn];
         int pos = 0;
-        for (int i = 1; i <= n; i++) {
+        for (int i = 1; i <= ROW; i++) {
             if (max < array[i][byColumn]) {
                 max = array[i][byColumn];
                 pos = i;
