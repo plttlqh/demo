@@ -3,6 +3,8 @@ package com.example;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
     public static int ROW = 3;
@@ -15,17 +17,35 @@ public class Main {
     private static int[][] arrayPath;
 
     public static void main(String[] args) throws IOException {
-        inputArray();
-
+//        inputArray();
+//        arrayPath = new int[][]{
+//                {-1,4,5,1},
+//                {2,-1,2,4},
+//                {3,3,-1,3},
+//                {4,2,1,2}
+//        };
+        arrayPath = new int[][]{
+                {10,1,1,-1},
+                {2,-1,-1,4},
+                {3,-1,-1,-1},
+                {4,3,1,244}
+        };
+//        arrayPath = new int[][]{
+//                {-1, 4, 5, 1},
+//                {2, -1, 2, 4},
+//                {3, 3, -1, -1},
+//                {4, 2, 1, 2}
+//        };
         int[] pos;
         int[] posNext = new int[1];
         int[] posPrev;
-        int[] posPrevPrev;
+        HashMap<Integer, Integer> posPassed = new HashMap<>();
+
         pos = findPosNumberLargestByColumn(arrayPath, 0);
-        posPrevPrev = posPrev = pos;
+        posPrev = pos;
         int sumScore = 0;
         boolean flagGoUpOrDow = false;
-        sumScore = findHighestScore(arrayPath, pos, posPrev, posPrevPrev, posNext, sumScore, flagGoUpOrDow);
+        sumScore = findHighestScore(arrayPath, pos, posPrev, posNext, sumScore, flagGoUpOrDow, posPassed);
         System.out.println("Highest way: " + sumScore);
     }
 
@@ -58,9 +78,9 @@ public class Main {
         }
     }
 
-    private static int findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posPrevPrev, int[] posNext, int sum, boolean flagGoUpOrDow){
+    private static int findHighestScore(int[][] array, int[] pos, int[] posPrev, int[] posNext, int sum, boolean flagGoUpOrDow, HashMap<Integer, Integer> posPassed){
         do {
-            int[][] posNumberNeighbor = findPosNumberNeighbor(pos, posPrev, posPrevPrev);
+            int[][] posNumberNeighbor = findPosNumberNeighbor(pos, posPrev, posPassed);
             try {
                 posNext = findPosNumberLargestByNeighbor(posNumberNeighbor, array);
             } catch (NullPointerException e) {
@@ -89,17 +109,18 @@ public class Main {
                     }
                     return sum;
                 }
-                int[] posPrevPrevNewPath = posPrev;
                 int[] posPrevNewPath = pos;
                 int[] posNewPath = posNextOtherPath;
-                int highestScore = findHighestScore(array, posNewPath, posPrevNewPath, posPrevPrevNewPath, posNextOtherPath, sum, false);
+                HashMap<Integer, Integer> posPassedNewPath = new HashMap<>();
+                posPassedNewPath.put(posNewPath[0], posNewPath[1]);
+                int highestScore = findHighestScore(array, posNewPath, posPrevNewPath, posNextOtherPath, sum, false, posPassedNewPath);
                 sumOtherPath = sumOtherPath > highestScore ?  sumOtherPath :  highestScore;
                 sum = 0;
             } else {
                 sum += array[pos[0]][pos[1]];
             }
-            posPrevPrev = posPrev;
             posPrev = pos;
+            posPassed.put(pos[0], pos[1]);
             pos = posNext;
         } while (array[posNext[0]][posNext[1]] != -1 && pos[1] <= COLUMN);
         if(!isSnakeCanReachRightSide(pos)){
@@ -120,27 +141,32 @@ public class Main {
         if(posNumberNeighbor.length-1 == 0){
             throw new NullPointerException();
         }
-        int[][] cloneNeighbor = new int[posNumberNeighbor.length-1][2];
+        int[][] cloneNeighbor = removePositionDuplicated(posNumberNeighbor, maxOfNeighbor);
+        return findPosNumberLargestByNeighbor(cloneNeighbor, array);
+    }
+
+    private static int[][] removePositionDuplicated(int[][] posNeededCheck, int[] posNeededRemove) {
+        int[][] posReturn = new int[posNeededCheck.length-1][2];
         boolean flagMove = false;
-        for (int i = 0; i < posNumberNeighbor.length; i++) {
-            if((posNumberNeighbor[i][0] == maxOfNeighbor[0]) && (posNumberNeighbor[i][1] == maxOfNeighbor[1])) {
-                if(i + 1 < posNumberNeighbor.length) {
-                    posNumberNeighbor[i][0] = posNumberNeighbor[i + 1][0];
-                    posNumberNeighbor[i][1] = posNumberNeighbor[i + 1][1];
+        for (int i = 0; i < posNeededCheck.length; i++) {
+            if((posNeededCheck[i][0] == posNeededRemove[0]) && (posNeededCheck[i][1] == posNeededRemove[1])) {
+                if(i + 1 < posNeededCheck.length) {
+                    posNeededCheck[i][0] = posNeededCheck[i + 1][0];
+                    posNeededCheck[i][1] = posNeededCheck[i + 1][1];
                     flagMove = true;
                 }
             } else {
-                if (flagMove && i + 1 < posNumberNeighbor.length){
-                    posNumberNeighbor[i][0] = posNumberNeighbor[i + 1][0];
-                    posNumberNeighbor[i][1] = posNumberNeighbor[i + 1][1];
+                if (flagMove && i + 1 < posNeededCheck.length){
+                    posNeededCheck[i][0] = posNeededCheck[i + 1][0];
+                    posNeededCheck[i][1] = posNeededCheck[i + 1][1];
                 }
             }
         }
-        for (int i = 0; i < cloneNeighbor.length; i++) {
-            cloneNeighbor[i][0] = posNumberNeighbor[i][0];
-            cloneNeighbor[i][1] = posNumberNeighbor[i][1];
+        for (int i = 0; i < posReturn.length; i++) {
+            posReturn[i][0] = posNeededCheck[i][0];
+            posReturn[i][1] = posNeededCheck[i][1];
         }
-        return findPosNumberLargestByNeighbor(cloneNeighbor, array);
+        return posReturn;
     }
 
     private static boolean checkGoUpOrGoDown(int[] pos, int[] posNext) {
@@ -151,7 +177,7 @@ public class Main {
     }
 
     private static int[] findPosNumberLargestByNeighbor(int[][] posNumberNeighbor, int[][] array) throws NullPointerException {
-        if(posNumberNeighbor == null){
+        if(posNumberNeighbor == null || posNumberNeighbor.length == 0){
             throw new NullPointerException();
         }
         int max = array[posNumberNeighbor[0][0]][posNumberNeighbor[0][1]];
@@ -169,7 +195,7 @@ public class Main {
         return new int[]{posX, posY};
     }
 
-    private static int[][] findPosNumberNeighbor(int[] pos, int[] posPrev, int[] posPrevPrev) {
+    private static int[][] findPosNumberNeighbor(int[] pos, int[] posPrev, HashMap<Integer, Integer> posPassed) {
         int[][] neighbors;
         if (pos[0] == 0 && pos[1] == 0) {
             neighbors = new int[MAX_NEIGHBOR - 1][2];
@@ -214,13 +240,9 @@ public class Main {
                 neighbors[1][0] = pos[0] + 1;
                 neighbors[1][1] = pos[1];
             } else {
-                if(posPrev[0] - 1 == posPrevPrev[0] || posPrevPrev[0] + 1 == pos[0] + ROW){
-                    neighbors = null;
-                } else {
-                    neighbors = new int[MAX_NEIGHBOR - 2][2];
-                    neighbors[0][0] = pos[0] + ROW == posPrev[0] ? pos[0] + 1 : pos[0] + ROW;
-                    neighbors[0][1] = pos[1];
-                }
+                neighbors = new int[MAX_NEIGHBOR - 2][2];
+                neighbors[0][0] = pos[0] + ROW == posPrev[0] ? pos[0] + 1 : pos[0] + ROW;
+                neighbors[0][1] = pos[1];
             }
         } else if (pos[0] == ROW) {
             if (pos[1] - 1 == posPrev[1]) {
@@ -281,6 +303,27 @@ public class Main {
                 neighbors[0][1] = pos[1];
                 neighbors[1][0] = pos[0];
                 neighbors[1][1] = pos[1] + 1;
+            }
+        }
+        return filterNeighborsIfItPassed(neighbors, posPassed);
+    }
+
+    private static int[][] filterNeighborsIfItPassed(int[][] neighbors, HashMap<Integer, Integer> posPassed) {
+        int[] posDup = new int[2];
+        boolean flagDup = false;
+        if(posPassed.size() >= ROW - 1){
+
+            for (int i = 0; i < neighbors.length; i++) {
+                for (Map.Entry<Integer, Integer> entry : posPassed.entrySet()) {
+                    if(neighbors[i][0] == entry.getKey() && neighbors[i][1] == entry.getValue()){
+                        posDup[0] = entry.getKey();
+                        posDup[1] = entry.getValue();
+                        flagDup = true;
+                    }
+                }
+            }
+            if(flagDup) {
+                return removePositionDuplicated(neighbors, posDup);
             }
         }
         return neighbors;
