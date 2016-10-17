@@ -8,7 +8,7 @@ public class InputTest {
         try {
             InputStream in = new LowerCaseInputStream(new BufferedInputStream(new FileInputStream(("/home/hale/Backend/Learning/demo/src/main/java/com/example/pattern/decorating/io/test.txt"))));
             while ((c=in.read()) >= 0){
-                System.out.println((char)c);
+                System.out.print((char)c);
             }
             in.close();
         } catch (IOException e){
